@@ -366,3 +366,115 @@ lines(x=index(AMZN.sma2012),y=AMZN.sma2012$sma200,lty=2)
 legend("topleft",
   c("Amazon Price","50-Day Moving Average","200-Day Moving Average"),
   lty=c(1,1,2))
+
+/* 1.6.2 Volatility: Bollinger Bands */
+
+* Obtain closing prices for Amazon.com stock *
+AMZN.bb<-data.AMZN[,4]
+AMZN.bb[c(1:3,nrow(AMZN.bb)),]
+
+* Calculate the rolling 20-day mean and standard deviation *
+AMZN.bb$avg<-rollmeanr(AMZN.bb$AMZN.Close,k=20)
+AMZN.bb$sd<-rollapply(AMZN.bb$AMZN.Close,width=20,FUN=sd,fill=NA)
+AMZN.bb[c(1:3,nrow(AMZN.bb)),]
+AMZN.bb[18:22,]
+
+* Subset to only show 2013 data *
+AMZN.bb2013<-subset(AMZN.bb,
+  index(AMZN.bb)>="2013-01-01")
+AMZN.bb2013[c(1:3,nrow(AMZN.bb2013)),]
+
+* Calculate the Bollinger Bands *
+AMZN.bb2013$sd2up<-AMZN.bb2013$avg+2*AMZN.bb2013$sd
+AMZN.bb2013$sd2down<-AMZN.bb2013$avg-2*AMZN.bb2013$sd
+AMZN.bb2013[c(1:3,nrow(AMZN.bb2013)),]
+
+* Plot the Bollinger Bands *
+y.range<-range(AMZN.bb2013[,-3],na.rm=TRUE)
+y.range
+plot(x=index(AMZN.bb2013),
+  xlab="Date",
+  y=AMZN.bb2013$AMZN.Close,
+  ylim=y.range,
+  ylab="Price ($)",
+  type="l",
+  lwd=3,
+  main="Amazon - Bollinger Bands (20 days, 2 deviations)
+    January 1, 2013 - December 31, 2013")
+lines(x=index(AMZN.bb2013),y=AMZN.bb2013$avg,lty=2)
+lines(x=index(AMZN.bb2013),y=AMZN.bb2013$sd2up,col="gray40")
+lines(x=index(AMZN.bb2013),y=AMZN.bb2013$sd2down,col="gray40")
+legend("topleft",
+  c("Amazon Price","20-Day Moving Average","Upper Band","Lower Band"),
+  lty=c(1,2,1,1),
+  lwd=c(3,1,1,1),
+  col=c("black","black","gray40","gray40"))
+
+/* 1.6.3 Momentum: Relative Strength Index */
+
+* Relative Strength Index is equal to 100 - (100)/(1 + RS) *
+* where RS is equal to the up average divided by the down average *
+* with the averages calculated using the Wilder Exp MA *
+
+* Obtain closing prices for Amazon.com stock *
+AMZN.RSI<-data.AMZN[,4]
+AMZN.RSI$delta<-diff(AMZN.RSI$AMZN.Close)
+AMZN.RSI[c(1:3,nrow(AMZN.RSI)),]
+
+* Create dummy variables to indicate whether price went up or down *
+AMZN.RSI$up<-ifelse(AMZN.RSI$delta>0,1,0)
+AMZN.RSI$down<-ifelse(AMZN.RSI$delta<0,1,0)
+AMZN.RSI[c(1:3,nrow(AMZN.RSI)),]
+
+* Calculate prices for up and down days *
+AMZN.RSI$up.val<-AMZN.RSI$delta*AMZN.RSI$up
+AMZN.RSI$down.val<--AMZN.RSI$delta*AMZN.RSI$down
+AMZN.RSI<-AMZN.RSI[-1,]
+AMZN.RSI[c(1:3,nrow(AMZN.RSI)),]
+
+* Calculate initial up and down 14-day averages *
+AMZN.RSI$up.first.avg<-rollapply(AMZN.RSI$up.val,
+  width=14,FUN=mean,fill=NA,na.rm=TRUE)
+AMZN.RSI$down.first.avg<-rollapply(AMZN.RSI$down.val,
+  width=14,FUN=mean,fill=NA,na.rm=TRUE)
+AMZN.RSI[c(1:3,nrow(AMZN.RSI)),]
+
+* Calculate the Wilder Exponential Moving Average to calculate final up and down 14-day moving averages *
+up.val<-as.numeric(AMZN.RSI$up.val)
+down.val<-as.numeric(AMZN.RSI$down.val)
+
+AMZN.RSI$up.avg<-AMZN.RSI$up.first.avg
+for (i in 15:nrow(AMZN.RSI)) {
+  AMZN.RSI$up.avg[i] <-
+    ((AMZN.RSI$up.avg[i-1]*13+up.val[i])/14)
+}
+AMZN.RSI$down.avg<-AMZN.RSI$down.first.avg
+for (i in 15:nrow(AMZN.RSI)) {
+  AMZN.RSI$down.avg[i] <-
+    ((AMZN.RSI$down.avg[i-1]*13+down.val[i])/14)
+}
+AMZN.RSI[c(1:20,nrow(AMZN.RSI)),]
+
+* Calculate the RSI *
+AMZN.RSI$RS<-AMZN.RSI$up.avg/AMZN.RSI$down.avg
+AMZN.RSI$RSI<-100-(1--/(1+AMZN.RSI$RS))
+AMZN.RSI[c(14:30,nrow(AMZN.RSI)),]
+
+* Subset to show only 2012 and 2013 data *
+AMZN.RSI2012<-subset(AMZN.RSI[,ncol(AMZN.RSI)],
+  index(AMZN.RSI)>="2012-01-01")
+AMZN.RSI2012[c(1:3,nrow(AMZN.RSI2012)),]
+
+* Plot the RSI *
+title1<-"Amazon - Relative Strength Index"
+title2<-"January 2012 - December 2013"
+plot(x=index(AMZN.RSI2012),
+  xlab="Date",
+  y=AMZN.RSI2012$RSI,
+  ylab="RSI (14-Day Moving Average)",
+  ylim=c(0,100),
+  type="l",
+  main=paste(title1,"\n",title2))
+abline(h=c(30,70),lty=2)
+
+/* end */
