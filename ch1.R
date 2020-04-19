@@ -151,7 +151,7 @@ chartSeries(AMZN.ohlc,
   theme="white.mono",
   name="AMZN OHLC")
 
-/* Comparing Capital Gains of Multiple Securities Over Time */
+/* 1.5 Comparing Capital Gains of Multiple Securities Over Time */
 
 ls()
 rm(list=ls())
@@ -202,3 +202,167 @@ plot(x=multi.df$date,
   lwd=2,
   main="Value of $1 Investment in AMZN, IBM, YHOO, and the S&P 500 Index
   December 31, 2010 - December 31, 2013")
+
+lines(x=multi.df$date,
+  y=multi.df$AMZN.idx,
+  col="black",
+  lty=2,
+  lwd=1)
+lines(x=multi.df$date,
+  y=multi.df$IBM.idx,
+  col="gray",
+  lty=2,
+  lwd=1)
+lines(x=multi.df$date,
+  y=multi.df$YHOO.idx,
+  col="gray",
+  lty=1,
+  lwd=1)
+
+abline(h=1,lty=1,col="black)
+
+legend("topleft",
+  c("AMZN","IBM","YHOO","S&P 500 Index"),
+  col=c("black","gray","gray","black"),
+  lty=c(2,2,1,1),
+  lwd=c(1,1,1,2))
+
+* Fix the y-axis to encompass range of normalized values for all securities *
+y.range<-range(multi.df[,6:9])
+y.range
+
+plot(x=multi.df$date,
+  y=multi.df$GSPC.idx,
+  type="l",
+  xlab="Date",
+  ylim=y.range,
+  ylab="Value of Investment ($)",
+  col="black",
+  lty=1,
+  lwd=2,
+  main="Value of $1 Investment in AMZN, IBM, YHOO, and the S&P 500 Index
+  December 31, 2010 - December 31, 2013")
+lines(x=multi.df$date,
+  y=multi.df$AMZN.idx,
+  col="black",
+  lty=2,
+  lwd=1)
+lines(x=multi.df$date,
+  y=multi.df$IBM.idx,
+  col="gray",
+  lty=2,
+  lwd=1)
+lines(x=multi.df$date,
+  y=multi.df$YHOO.idx,
+  col="gray",
+  lty=1,
+  lwd=1)
+abline(h=1,lty=1,col="black)
+legend("topleft",
+  c("AMZN","IBM","YHOO","S&P 500 Index"),
+  col=c("black","gray","gray","black"),
+  lty=c(2,2,1,1),
+  lwd=c(1,1,1,2))
+
+/* 1.5.1 Alternative Presentation of a Normalized Price Chart */
+* Setup chart layout in R *
+par(oma=c(0,0,3,0))
+
+* Let R know we will be plotting 4 charts with 2 charts in each column and 2 charts in each row *
+par(mfrow=c(2,2))
+
+* Create the 4 plots *
+plot(x=multi.df$date,
+  xlab="",
+  y=multi.df$YHOO.idx,
+  ylim=y.range,
+  ylab="",
+  type="l",
+  col="gray",
+  main="Amazon Stock")
+lines(x=multi.df$date,y=multi.df$GSPC.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$IBM.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$AMZN.idx,col="black",lwd=2)
+abline(h=1)
+  
+plot(x=multi.df$date,
+  xlab="",
+  y=multi.df$YHOO.idx,
+  ylim=y.range,
+  ylab="",
+  type="l",
+  col="gray",
+  main="IBM Stock")
+lines(x=multi.df$date,y=multi.df$AMZN.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$GSPC.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$IBM.idx,col="black",lwd=2)
+abline(h=1)
+
+plot(x=multi.df$date,
+  xlab="",
+  y=multi.df$GSPC.idx,
+  ylim=y.range,
+  ylab="",
+  type="l",
+  col="gray",
+  main="Yahoo Stock")
+lines(x=multi.df$date,y=multi.df$AMZN.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$IBM.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$YHOO.idx,col="black",lwd=2)
+abline(h=1)
+
+plot(x=multi.df$date,
+  xlab="",
+  y=multi.df$YHOO.idx,
+  ylim=y.range,
+  ylab="",
+  type="l",
+  col="gray",
+  main="S&P 500 Index")
+lines(x=multi.df$date,y=multi.df$AMZN.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$IBM.idx,col="gray")
+lines(x=multi.df$date,y=multi.df$GSPC.idx,col="black",lwd=2)
+abline(h=1)
+
+* Create a global title for the charts *
+title1="Value of $1 Invested in Amazon, IBM, Yahoo, and the Market"
+title2="December 31, 2010 - December 31, 2013"
+title(main=paste(title1,"\n",title2),outer=T)
+
+/* 1.6 Technical Analysis Examples */
+
+/* 1.6.1 Trend: Simple Moving Average Crossover */
+
+* Obtain closing prices for Amazon.com stock *
+AMZN.sma<-data.AMZN[,4]
+AMZN.sma[c(1:3,nrow(AMZN.sma)),]
+
+* Calculate the rolling 50-day and 200-day moving average price *
+AMZN.sma$sma50<-rollmeanr(AMZN.sma$AMZN.Close,k=50)
+AMZN.sma$sma200<-rollmeanr(AMZN.sma$AMZN.Close,k=200)
+AMZN.sma[c(1:3,nrow(AMZN.sma)),]
+AMZN.sma[48:52,]
+
+* Subset to only show 2012 and 2013 data *
+AMZN.sma[198:202,]
+AMZN.sma2012<-subset(AMZN.sma,
+  index(AMZN.sma)>="2012-01-01")
+AMZN.sma2012[c(1:3,nrow(AMZN.sma2012)),]
+
+* Plot the SMA *
+y.range<-range(AMZN.sma2012,na.rm=TRUE)
+y.range
+par(mfrow=c(1,1))
+plot(x=index(AMZN.sma2012),
+  xlab="Date",
+  y=AMZN.sma2012$AMZN.Close,
+  ylim=y.range,
+  ylab="Price ($)",
+  type="l",
+  main="Amazon - Simple Moving Average
+    January 1, 2012 - December 31, 2013")
+lines(x=index(AMZN.sma2012),y=AMZN.sma2012$sma50)
+lines(x=index(AMZN.sma2012),y=AMZN.sma2012$sma200,lty=2)
+legend("topleft",
+  c("Amazon Price","50-Day Moving Average","200-Day Moving Average"),
+  lty=c(1,1,2))
